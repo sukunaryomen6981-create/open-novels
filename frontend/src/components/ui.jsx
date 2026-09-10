@@ -10,7 +10,14 @@ export function NovelCard({ novel }) {
   return (
     <Link to={`/novels/${novel.slug || novel.id}`} className="card group">
       <div className="relative aspect-[2/3] overflow-hidden bg-black/40">
-        <img src={novel.coverImage} alt={novel.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition" />
+        {novel.coverImage ? (
+          <img src={novel.coverImage} alt={novel.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition" />
+        ) : (
+          <div className="h-full w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#2A1F14] to-[#0F0C08] text-brass">
+            <span className="font-display font-bold text-4xl">{(novel.title || '?')[0]}</span>
+            <span className="text-[10px] tracking-[0.2em] opacity-70">OPENNOVELS</span>
+          </div>
+        )}
         <span className="absolute top-2 left-2 chip bg-black/70">{novel.status}</span>
       </div>
       <div className="p-3">

@@ -4,6 +4,10 @@ import { authRequired, authOptional, adminOnly } from '../middleware/auth.js';
 import { writeLimiter } from '../middleware/security.js';
 import { slugify } from '../utils/helpers.js';
 
+// Covers are either https:// image links (uploads live on free external
+// hosts — Render's free disk wipes local files) or generated SVG data URIs.
+const coverOk = (u) => !u || /^https?:\/\//i.test(u) || /^data:image\/svg\+xml/i.test(u);
+
 const router = express.Router();
 
 // Public: list + detail + chapters
@@ -41,6 +45,7 @@ router.post('/', authRequired, writeLimiter, async (req, res, next) => {
     if (title.length > 150) return res.status(400).json({ error: 'Title too long (150 max)' });
     if (synopsis && synopsis.length > 10000) return res.status(413).json({ error: 'Synopsis too long' });
     if (coverImage && coverImage.length > 2000) return res.status(400).json({ error: 'Cover URL too long' });
+    if (!coverOk(coverImage)) return res.status(400).json({ error: 'Cover must be an https:// image link or a generated cover' });
     const novel = await store.createNovel({
       title: title.trim(), slug: slugify(title), synopsis: synopsis || '',
       authorId: req.user.id, authorName: String(req.body.authorName || 'Anonymous').slice(0, 60),
@@ -64,6 +69,7 @@ router.patch('/:id', authRequired, writeLimiter, async (req, res, next) => {
     for (const k of EDITABLE_NOVEL_FIELDS) if (req.body[k] !== undefined) patch[k] = req.body[k];
     if (patch.title && patch.title.length > 150) return res.status(400).json({ error: 'Title too long' });
     if (patch.synopsis && patch.synopsis.length > 10000) return res.status(413).json({ error: 'Synopsis too long' });
+    if (patch.coverImage !== undefined && !coverOk(patch.coverImage)) return res.status(400).json({ error: 'Cover must be an https:// image link or a generated cover' });
     const r = await store.updateNovel(req.params.id, patch, req.user.id, req.user.role === 'admin');
     if (r === 'forbidden') return res.status(403).json({ error: 'Only the author can edit this story' });
     if (!r) return res.status(404).json({ error: 'Not found' });
