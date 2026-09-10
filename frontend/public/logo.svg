@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="OpenNovels logo">
+  <title>OpenNovels — publisher's seal</title>
+  <!-- Seal field -->
+  <circle cx="48" cy="48" r="45" fill="#16130E" stroke="#E5A83B" stroke-width="3.5"/>
+  <circle cx="48" cy="48" r="37" fill="none" stroke="#E5A83B" stroke-width="1" opacity="0.4"/>
+  <!-- Stud diamond crowning the ring -->
+  <path d="M48 2.5 l4 4 -4 4 -4 -4 Z" fill="#E5A83B"/>
+  <!-- Serif monogram (system serif: renders everywhere, no webfont needed) -->
+  <text x="48" y="63" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="35" fill="#F4EEE1" letter-spacing="-1">ON</text>
+  <!-- Open-book smile beneath the monogram -->
+  <path d="M28 70 Q38 64 48 70 Q58 64 68 70 L68 75.5 Q58 69.5 48 75.5 Q38 69.5 28 75.5 Z" fill="#E5A83B"/>
+</svg>

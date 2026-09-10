@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ——— OpenNovels editorial tokens ———
+   bg/text  #16130E  warm espresso ink (never pure black)
+   text/bg   #F4EEE1  parchment paper
+   CTA       #E5A83B  brass — the ONLY accent; everything else is a tint of the three
+*/
+:root { color-scheme: dark; }
+html { scroll-behavior: smooth; }
+body { @apply bg-ink text-paper antialiased; font-family: 'DM Sans', system-ui, sans-serif; }
+::selection { background: #E5A83B; color: #16130E; }
+
+/* Type scale: display always Fraunces + tight tracking */
+.font-display { font-family: 'Fraunces', Georgia, serif; }
+.tracking-tight-display { letter-spacing: -0.02em; }
+
+/* ——— Buttons: single brass CTA, fill-sweep hover, press-down active ——— */
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold transition-all duration-200; }
+.btn-primary { @apply btn bg-brass text-ink; box-shadow: 0 8px 28px -12px rgb(229 168 59 / .55); }
+.btn-primary:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 14px 34px -12px rgb(229 168 59 / .65); }
+.btn-primary:active { transform: translateY(0); filter: brightness(.98); }
+.btn-ghost { @apply btn border border-white/15 bg-white/5 hover:border-brass/50 hover:bg-white/10; }
+.btn:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid #E5A83B; outline-offset: 2px;
+}
+
+/* ——— Cards: 1px border luminance on hover, lift without bounce ——— */
+.card {
+  @apply bg-coal/90 rounded-2xl overflow-hidden border border-white/10 shadow-lg;
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+.card:hover { border-color: rgb(229 168 59 / .4); box-shadow: 0 18px 44px -22px rgb(229 168 59 / .3); }
+.input { @apply w-full rounded-xl bg-black/40 border border-white/10 px-4 py-2.5 outline-none focus:border-brass transition-colors; }
+textarea.input { @apply leading-relaxed; }
+.chip { @apply text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-paper/80; }
+.skeleton { @apply animate-pulse bg-white/10 rounded-xl; }
+
+/* ——— Story prose: editorial serif, generous measure ——— */
+.prose-story { font-family: 'Fraunces', Georgia, serif; max-width: 38rem; }
+.prose-story p { @apply mb-6 leading-9 text-[1.15rem] text-paper/90; }
+
+/* ——— Hero: warm glow + faint ruled-paper lines ——— */
+.hero-bg {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 75% 20%, rgb(229 168 59 / .12), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 10% 90%, rgb(229 168 59 / .06), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 35px, rgb(244 238 225 / .025) 35px 36px);
+}
+.hairline { border-color: rgb(244 238 225 / .1); }
+
+/* ——— Entrance: single soft rise, staggered via inline delay ——— */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.reveal { opacity: 0; animation: rise .7s cubic-bezier(.22,.61,.36,1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ——— FAQ accordion: buttery grid-rows animation, no jitter ——— */
+.faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .32s cubic-bezier(.22,.61,.36,1); }
+.faq-a.open { grid-template-rows: 1fr; }
+.faq-a > div { overflow: hidden; }
+.faq-q:hover { border-color: rgb(229 168 59 / .35); }

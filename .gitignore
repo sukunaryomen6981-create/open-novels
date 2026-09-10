@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Production builds (rebuilt by the host)
+frontend/dist/
+
+# Secrets — NEVER commit these
+.env
+backend/.env
+frontend/.env
+
+# Local dev logs
+*.log
+backend-run.log
+dev-run.log
+backend.log
+backend-err.log
+
+# OS junk
+.DS_Store
+Thumbs.db
