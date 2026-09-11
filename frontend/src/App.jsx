@@ -8,7 +8,7 @@ import Browse from './pages/Browse.jsx';
 import NovelDetails from './pages/NovelDetails.jsx';
 import Reader from './pages/Reader.jsx';
 import { Write, ManageStory } from './pages/Write.jsx';
-import { Login, Register } from './pages/Auth.jsx';
+import { Login, Register, VerifyEmail } from './pages/Auth.jsx';
 import { Library, Profile, SearchPage, Genres, GenreDetail, Admin, NotFound } from './pages/misc.jsx';
 import { Rankings, Contests, Prompts } from './pages/discover.jsx';
 import { Terms, Privacy, Guidelines, Copyright } from './pages/legal.jsx';
@@ -35,6 +35,7 @@ export default function App() {
             <Route path="/prompts" element={<Prompts />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />

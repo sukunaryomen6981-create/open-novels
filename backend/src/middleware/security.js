@@ -68,3 +68,12 @@ export const writeLimiter = rateLimit({
   limit: 60,
   message: { error: 'Publishing limit reached for this hour — please wait and try again.' }
 });
+
+// Verification emails: 5 resends/15min — generous for humans, useless for
+// anyone trying to turn your mailer into a spam cannon.
+export const resendLimiter = rateLimit({
+  ...base,
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  message: { error: 'Too many resends — please wait a few minutes.' }
+});

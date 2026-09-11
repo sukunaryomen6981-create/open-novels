@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { safeGet } from '../services/api.js';
 import { GENRES, GENRE_EMOJI } from '../services/mockData.js';
-import { toast } from '../components/ui.jsx';
+import { toast, VerifyBanner, ImageUploadButton } from '../components/ui.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { BecomeAuthor } from './misc.jsx';
 import { currentContest } from './discover.jsx';
@@ -54,7 +54,8 @@ export function Write() {
       const { data } = await api.post('/novels', payload);
       toast('Story created! Now add chapter 1.');
       nav(`/write/${data.slug || data._id || data.id}`);
-    } catch {
+    } catch (er) {
+      if (er.response?.data?.code === 'UNVERIFIED') { toast('Verify your email first — link sent at signup'); return; }
       // offline demo: store locally
       const local = { ...payload, slug: `local-${Date.now()}`, id: `local-${Date.now()}`, _id: `local-${Date.now()}`, status: 'Ongoing', coverImage: '', chaptersCount: 0 };
       const all = [local, ...JSON.parse(localStorage.getItem('my-stories') || '[]')];
@@ -69,6 +70,7 @@ export function Write() {
     <div className="py-6 max-w-3xl">
       <h1 className="text-2xl font-black">✍️ Write a new story</h1>
       <p className="text-sm text-zinc-400 mt-1">You own what you write. Publishing here is free under the license you choose (CC-BY recommended).</p>
+      <div className="mt-3"><VerifyBanner /></div>
       <form onSubmit={create} className="mt-4 grid gap-2">
         <input className="input" placeholder="Story title *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
         <input className="input" placeholder="Pen name to display" value={form.authorName} onChange={(e) => setForm({ ...form, authorName: e.target.value })} />
@@ -86,9 +88,10 @@ export function Write() {
         <p className="text-xs text-paper/50">Entering the <Link to="/contests" className="text-brass">weekly contest</Link>? Add this week’s tag: <code className="text-brass">{currentContest().tag}</code></p>
         <div className="rounded-2xl border border-white/10 p-4">
           <p className="font-bold text-sm">Cover art</p>
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2 flex-wrap">
             <button type="button" onClick={() => setCoverMode('auto')} className={`btn !py-1.5 text-sm ${coverMode === 'auto' ? 'btn-primary' : 'btn-ghost'}`}>✨ Auto-generate</button>
             <button type="button" onClick={() => setCoverMode('url')} className={`btn !py-1.5 text-sm ${coverMode === 'url' ? 'btn-primary' : 'btn-ghost'}`}>🔗 Image link</button>
+            <ImageUploadButton label="📁 Upload from device" onDone={(u) => { setCoverUrl(u); setCoverMode('url'); }} />
           </div>
           <div className="flex gap-3 mt-3 items-start">
             <div className="w-24 aspect-[2/3] rounded-xl overflow-hidden bg-black/40 shrink-0 border border-white/10">
@@ -149,7 +152,8 @@ export function ManageStory() {
     try {
       await api.post('/chapters', { novelId: novel._id || novel.id, ...draft, number: Number(draft.number) });
       toast(`Chapter ${draft.number} published!`);
-    } catch {
+    } catch (er) {
+      if (er.response?.data?.code === 'UNVERIFIED') { toast('Verify your email first — link sent at signup'); return; }
       toast('Backend offline — chapter kept in editor (copy it safe!)');
       return;
     }
@@ -172,6 +176,24 @@ export function ManageStory() {
   if (!user.isAuthor && !user.guest) return <div className="py-6 max-w-3xl"><Link to="/profile" className="text-sm text-accent">← Back to profile</Link><BecomeAuthor /></div>;
   if (novel === false) return <div className="py-16 text-center"><p className="text-xl font-bold">Story not found</p><Link to="/write" className="text-accent text-sm">← Back to my stories</Link></div>;
   if (!novel) return <div className="py-10">Loading…</div>;
+  // Ownership gate: anyone could open /write/someone-elses-slug and SEE the
+  // editor (writes were already 403'd server-side, but it looked editable).
+  // Admins keep access for moderation; local offline drafts are always yours.
+  const nid = String(novel._id || novel.id || '');
+  const isLocal = nid.startsWith('local-');
+  const ownerId = novel.authorId?.toString?.() ?? novel.authorId;
+  const canManage = isLocal || (user && (ownerId === user.id || user.role === 'admin'));
+  if (!canManage) return (
+    <div className="py-16 text-center max-w-md mx-auto">
+      <p className="text-4xl">🔒</p>
+      <h1 className="font-display font-semibold text-2xl mt-3">Only the author can manage this story</h1>
+      <p className="text-paper/60 text-sm mt-2">This shelf belongs to {novel.authorName || 'another author'}. (Site admins can open any story for moderation.)</p>
+      <div className="flex gap-2 justify-center mt-5">
+        <Link to={`/novels/${novel.slug}`} className="btn-primary">Read it instead →</Link>
+        <Link to="/write" className="btn-ghost btn">My stories</Link>
+      </div>
+    </div>
+  );
   const words = draft.content.split(/\s+/).filter(Boolean).length;
   return (
     <div className="py-6 max-w-3xl">
@@ -192,8 +214,9 @@ export function ManageStory() {
         <form onSubmit={saveCover} className="flex-1 grid gap-2">
           <p className="font-bold text-sm">Cover art</p>
           <input className="input" placeholder="New https:// image link (blank = keep)" value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button className="btn-ghost btn !py-1.5 text-sm">Save cover</button>
+            <ImageUploadButton label="📁 Upload" onDone={(u) => setCoverUrl(u)} />
             {coverMsg && <span className="text-xs text-paper/60">{coverMsg}</span>}
           </div>
         </form>

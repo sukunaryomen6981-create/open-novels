@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useDebounce } from '../hooks/hooks.js';
-import api from '../services/api.js';
+import api, { uploadImage } from '../services/api.js';
 
 export function Stars({ rating = 0 }) { return <span className="text-amber-300 text-sm">★ {Number(rating).toFixed(1)}</span>; }
 
@@ -44,6 +44,57 @@ export function toast(msg) {
   if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 bg-black/90 border border-white/20 px-4 py-2 rounded-xl z-[100]'; document.body.appendChild(el); }
   el.textContent = msg; el.style.display = 'block';
   clearTimeout(toastTimer); toastTimer = setTimeout(() => (el.style.display = 'none'), 2200);
+}
+
+// Avatar: uploaded/linked image, built-in emoji glyph, or pen-name initial.
+export function Avatar({ user, size = 'h-8 w-8 text-sm' }) {
+  const a = user?.avatar || '';
+  if (/^(https?:|data:image\/)/.test(a)) {
+    return <img src={a} alt="" className={`${size} rounded-xl object-cover border border-white/10`} />;
+  }
+  if (a) {
+    return <div className={`${size} rounded-xl bg-brass/15 border border-brass/40 flex items-center justify-center shrink-0`}>{a}</div>;
+  }
+  const initial = ((user?.penName || user?.username || '?')[0] || '?').toUpperCase();
+  return <div className={`${size} rounded-xl bg-brass text-ink font-black flex items-center justify-center shrink-0`}>{initial}</div>;
+}
+
+// One-tap device upload used by covers and avatars.
+export function ImageUploadButton({ onDone, label = '📁 Upload from device' }) {
+  const [busy, setBusy] = useState(false);
+  const pick = async (e) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { toast('Please choose an image file'); return; }
+    if (f.size > 5 * 1024 * 1024) { toast('Max 5MB per image'); return; }
+    setBusy(true);
+    try { onDone(await uploadImage(f)); toast('Uploaded ✓'); }
+    catch { toast('Upload failed — paste an image link instead'); }
+    finally { setBusy(false); }
+  };
+  return (
+    <label className={`btn-ghost btn !py-1.5 text-sm cursor-pointer ${busy ? 'opacity-60' : ''}`}>
+      {busy ? 'Uploading…' : label}
+      <input type="file" accept="image/*" className="hidden" onChange={pick} disabled={busy} />
+    </label>
+  );
+}
+
+// Shown to logged-in users who haven't confirmed their address yet.
+export function VerifyBanner() {
+  const { user } = useAuth();
+  const [msg, setMsg] = useState('');
+  if (!user || user.guest || user.isVerified) return null;
+  const resend = async () => {
+    try { await api.post('/auth/resend-verification'); setMsg('Verification email sent — check your inbox (and spam folder).'); }
+    catch { setMsg('Could not send right now — try again in a few minutes.'); }
+  };
+  return (
+    <div className="rounded-2xl border border-brass/40 bg-brass/10 p-4 text-sm">
+      <p><b>📧 Verify your email</b> to unlock publishing. {msg || <button onClick={resend} className="text-brass font-semibold underline">Resend the link</button>}</p>
+    </div>
+  );
 }
 
 function SearchBox() {
@@ -102,7 +153,7 @@ export function Header() {
         {user ? (
           <div className="relative hidden md:block text-sm">
             <button onClick={() => setMenu((m) => !m)} className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 hover:bg-white/20">
-              <span className="h-6 w-6 rounded-lg bg-accent flex items-center justify-center text-xs font-black">{initial}</span>
+              <Avatar user={user} size="h-6 w-6 text-[10px]" />
               <span className="max-w-[120px] truncate">{user.penName || user.username}</span>
               {user.isAuthor && <span title="Author">✍️</span>}
               <span className="text-zinc-400">▾</span>

@@ -1,6 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+
+export function VerifyEmail() {
+  const token = new URLSearchParams(location.search).get('token');
+  const [state, setState] = useState('checking');
+  const { user, updateUser } = useAuth();
+  useEffect(() => {
+    if (!token) { setState('bad'); return; }
+    api.get('/auth/verify-email', { params: { token } })
+      .then(() => { setState('ok'); if (user) updateUser({ isVerified: true }); })
+      .catch(() => setState('bad'));
+  }, []);
+  return (
+    <div className="py-16 max-w-md mx-auto text-center">
+      {state === 'checking' && <p className="text-paper/60">Confirming your email…</p>}
+      {state === 'ok' && (<><p className="text-4xl">✒️</p><h1 className="font-display font-semibold text-2xl mt-3">Email verified!</h1>
+        <p className="text-paper/60 text-sm mt-2">Publishing is unlocked. Go write something great.</p>
+        <Link to="/write" className="btn-primary mt-5">Start writing →</Link></>)}
+      {state === 'bad' && (<><p className="text-4xl">📭</p><h1 className="font-display font-semibold text-2xl mt-3">Link invalid or expired</h1>
+        <p className="text-paper/60 text-sm mt-2">Links last 24 hours. Grab a fresh one from your profile.</p>
+        <Link to="/profile" className="btn-primary mt-5">Go to profile →</Link></>)}
+    </div>
+  );
+}
 
 export function Login() {
   const [email, setEmail] = useState('');

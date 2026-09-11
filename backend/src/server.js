@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.js';
 import novelRoutes from './routes/novels.js';
 import chapterRoutes from './routes/chapters.js';
 import userRoutes from './routes/users.js';
+import uploadRoutes from './routes/uploads.js';
 import { store } from './config/store.js';
 import { GENRES } from './utils/seedData.js';
 dotenv.config();
@@ -44,6 +45,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/novels', novelRoutes);
 app.use('/api/chapters', chapterRoutes);
 app.use('/api', userRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Production single-service deploy: serve the built frontend (../frontend/dist)
 // for every non-API route so one host serves the whole site.

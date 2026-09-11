@@ -8,14 +8,14 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try { const { data } = await api.post('/auth/login', { email, password }); save(data.token, data.user); return data.user; }
     catch (e) {
-      if (!e.response) { const g = { id: 'guest', username: email.split('@')[0] || 'writer', penName: 'Guest Writer', email, role: 'user', guest: true }; save('demo-token', g); return g; }
+      if (!e.response) { const g = { id: 'guest', username: email.split('@')[0] || 'writer', penName: 'Guest Writer', email, role: 'user', guest: true, isVerified: true, avatar: '' }; save('demo-token', g); return g; }
       throw e;
     }
   };
   const register = async (username, email, password) => {
     try { const { data } = await api.post('/auth/register', { username, penName: username, email, password }); save(data.token, data.user); return data.user; }
     catch (e) {
-      if (!e.response) { const g = { id: 'guest', username, penName: username, email, role: 'user', guest: true }; save('demo-token', g); return g; }
+      if (!e.response) { const g = { id: 'guest', username, penName: username, email, role: 'user', guest: true, isVerified: true, avatar: '' }; save('demo-token', g); return g; }
       throw e;
     }
   };

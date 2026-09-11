@@ -1,6 +1,6 @@
 import express from 'express';
 import { store } from '../config/store.js';
-import { authRequired, authOptional } from '../middleware/auth.js';
+import { authRequired, authOptional, verifiedOnly } from '../middleware/auth.js';
 import { writeLimiter } from '../middleware/security.js';
 
 const router = express.Router();
@@ -24,7 +24,7 @@ router.get('/:id', authOptional, async (req, res, next) => {
 });
 
 // Publish a chapter to your own story
-router.post('/', authRequired, writeLimiter, async (req, res, next) => {
+router.post('/', authRequired, verifiedOnly, writeLimiter, async (req, res, next) => {
   try {
     const { novelId, number, title, content, status } = req.body;
     if (!novelId || number == null) return res.status(400).json({ error: 'novelId and number required' });

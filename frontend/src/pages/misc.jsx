@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { safeGet } from '../services/api.js';
-import { NovelCard, Empty, toast } from '../components/ui.jsx';
+import { NovelCard, Empty, toast, Avatar, ImageUploadButton, VerifyBanner } from '../components/ui.jsx';
 import { GENRES, GENRE_EMOJI } from '../services/mockData.js';
+import { AVATARS } from '../services/avatars.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export function Library() {
@@ -87,7 +88,7 @@ export function Profile() {
   const [library, setLibrary] = useState([]);
   const [words, setWords] = useState(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ penName: '', bio: '' });
+  const [form, setForm] = useState({ penName: '', bio: '', avatar: '' });
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     api.get('/progress').then(({ data }) => setHistory(data || [])).catch(() => {
@@ -98,7 +99,7 @@ export function Profile() {
       api.get('/library').then(({ data }) => setLibrary(Array.isArray(data) ? data : [])).catch(() => {});
     }
   }, []);
-  useEffect(() => { if (user) setForm({ penName: user.penName || '', bio: user.bio || '' }); }, [user]);
+  useEffect(() => { if (user) setForm({ penName: user.penName || '', bio: user.bio || '', avatar: user.avatar || '' }); }, [user]);
   useEffect(() => {
     if (!mine.length) { setWords(0); return; }
     Promise.all(mine.map((n) => safeGet(api.get(`/novels/${n._id || n.id}/chapters`), [])))
@@ -112,11 +113,11 @@ export function Profile() {
     if (!form.penName.trim()) { toast('Pen name can’t be empty'); return; }
     setSaving(true);
     try {
-      const { data } = await api.patch('/auth/me', { penName: form.penName.trim(), bio: form.bio });
+      const { data } = await api.patch('/auth/me', { penName: form.penName.trim(), bio: form.bio, avatar: form.avatar });
       updateUser(data);
       toast('Profile updated');
     } catch {
-      updateUser({ penName: form.penName.trim(), bio: form.bio });
+      updateUser({ penName: form.penName.trim(), bio: form.bio, avatar: form.avatar });
       toast('Saved locally (offline demo)');
     } finally { setSaving(false); setEditing(false); }
   };
@@ -129,9 +130,7 @@ export function Profile() {
   return (
     <div className="py-6 max-w-3xl">
       <div className="card p-5 flex gap-4 items-start">
-        <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${avatarColor(user.username)} flex items-center justify-center text-2xl font-black shrink-0`}>
-          {((user.penName || user.username || '?')[0] || '?').toUpperCase()}
-        </div>
+        <Avatar user={user} size="h-16 w-16 text-2xl" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-black truncate">{user.penName || user.username}</h1>
@@ -150,12 +149,25 @@ export function Profile() {
             <form onSubmit={saveProfile} className="mt-3 grid gap-2">
               <input className="input" value={form.penName} maxLength={30} onChange={(e) => setForm({ ...form, penName: e.target.value })} placeholder="Pen name" />
               <textarea className="input" rows={2} value={form.bio} maxLength={500} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Short bio" />
+              <div>
+                <p className="text-xs text-paper/60 mb-1.5">Avatar — pick one of 50, upload your own, or leave blank for your initial</p>
+                <div className="flex items-center gap-1.5 flex-wrap max-h-36 overflow-y-auto rounded-xl border border-white/10 p-2">
+                  <button type="button" title="Initial" onClick={() => setForm({ ...form, avatar: '' })}
+                    className={`h-9 w-9 rounded-xl bg-brass text-ink font-black flex items-center justify-center shrink-0 ${!form.avatar ? 'ring-2 ring-brass' : ''}`}>
+                    {((form.penName || user.username || '?')[0] || '?').toUpperCase()}
+                  </button>
+                  {AVATARS.map((em) => (
+                    <button type="button" key={em} onClick={() => setForm({ ...form, avatar: em })}
+                      className={`h-9 w-9 rounded-xl bg-white/5 border flex items-center justify-center text-lg shrink-0 ${form.avatar === em ? '!border-brass ring-1 ring-brass' : 'border-white/10'}`}>{em}</button>))}
+                </div>
+                <div className="mt-2"><ImageUploadButton label="📁 Upload avatar" onDone={(u) => setForm({ ...form, avatar: u })} /></div>
+              </div>
               <button className="btn-primary w-fit" disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
             </form>)}
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-        {stats.map(([label, value]) => (
+      <div className="mt-4"><VerifyBanner /></div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">        {stats.map(([label, value]) => (
           <div key={label} className="card p-4"><p className="text-xl font-black">{value}</p><p className="text-xs text-zinc-400 mt-0.5">{label}</p></div>))}
       </div>
       {!user.isAuthor && !user.guest ? <BecomeAuthor /> : (

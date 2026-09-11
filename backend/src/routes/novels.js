@@ -1,6 +1,6 @@
 import express from 'express';
 import { store } from '../config/store.js';
-import { authRequired, authOptional, adminOnly } from '../middleware/auth.js';
+import { authRequired, authOptional, adminOnly, verifiedOnly } from '../middleware/auth.js';
 import { writeLimiter } from '../middleware/security.js';
 import { slugify } from '../utils/helpers.js';
 
@@ -38,7 +38,7 @@ router.get('/:id/chapters', async (req, res, next) => {
 });
 
 // Create a story — any logged-in user is an author
-router.post('/', authRequired, writeLimiter, async (req, res, next) => {
+router.post('/', authRequired, verifiedOnly, writeLimiter, async (req, res, next) => {
   try {
     const { title, synopsis, genres, tags, language, status, coverImage, license } = req.body;
     if (!title?.trim()) return res.status(400).json({ error: 'Title is required' });
