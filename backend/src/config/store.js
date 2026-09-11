@@ -6,12 +6,25 @@ import { Chapter } from '../models/Chapter.js';
 const mem = {
   novels: [],
   chapters: [],
-  users: [], progress: []
+  users: [], progress: [], reviews: []
 };
 
 export const useDb = () => mongoose.connection.readyState === 1;
 export const memUsers = mem.users;
 export const memProgress = mem.progress;
+export const memReviews = mem.reviews;
+
+// Recomputes a novel's displayed score from its reviews (single source of
+// truth — rating/ratingsCount are never written directly by clients).
+export async function setNovelRating(novelId, rating, count) {
+  if (useDb()) {
+    const { Novel: NovelModel } = await import('../models/Novel.js');
+    await NovelModel.findByIdAndUpdate(novelId, { rating, ratingsCount: count });
+    return;
+  }
+  const n = mem.novels.find((x) => String(x._id) === String(novelId) || String(x.id) === String(novelId));
+  if (n) { n.rating = rating; n.ratingsCount = count; n.updatedAt = new Date(); }
+}
 
 export const store = {
   async listNovels({ q, genre, tag, status, sort = 'updated', page = 1, limit = 18, authorId } = {}) {

@@ -4,7 +4,10 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useDebounce } from '../hooks/hooks.js';
 import api, { uploadImage } from '../services/api.js';
 
-export function Stars({ rating = 0 }) { return <span className="text-amber-300 text-sm">★ {Number(rating).toFixed(1)}</span>; }
+export function Stars({ rating = 0, count }) {
+  if (!count) return <span className="text-zinc-500 text-sm">☆ New</span>;
+  return <span className="text-amber-300 text-sm">★ {Number(rating).toFixed(1)}<span className="text-zinc-500">/10</span></span>;
+}
 
 export function NovelCard({ novel }) {
   return (
@@ -24,7 +27,7 @@ export function NovelCard({ novel }) {
         <h3 className="font-semibold truncate">{novel.title}</h3>
         <p className="text-xs text-zinc-400 truncate">by {novel.authorName}</p>
         <div className="flex items-center justify-between text-sm mt-1">
-          <Stars rating={novel.rating} />
+          <Stars rating={novel.rating} count={novel.ratingsCount} />
           <span className="text-zinc-400 text-xs">{novel.chaptersCount ?? ''} {novel.chaptersCount === 1 ? 'ch' : 'chs'}</span>
         </div>
       </div>
